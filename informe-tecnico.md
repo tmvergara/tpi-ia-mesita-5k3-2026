@@ -16,6 +16,29 @@
 
 ---
 
+## Índice
+
+- [1. Análisis del Dataset (EDA)](#1-análisis-del-dataset-eda)
+  - [1.1 Estadísticas generales](#11-estadísticas-generales)
+  - [1.2 Distribución por clases](#12-distribución-por-clases)
+  - [1.3 Clustering exploratorio](#13-clustering-exploratorio)
+- [2. Metodología](#2-metodología)
+  - [2.1 Baseline: CLIP + FAISS](#21-baseline-clip--faiss)
+  - [2.2 Pipeline agéntico con Phi-3-mini](#22-pipeline-agéntico-con-phi-3-mini)
+  - [2.3 Reranking para consultas con negaciones](#23-reranking-para-consultas-con-negaciones)
+  - [2.4 Sobre el ensemble de templates y por qué lo descartamos](#24-sobre-el-ensemble-de-templates-y-por-qué-lo-descartamos)
+  - [2.5 Decisiones de diseño - resumen](#25-decisiones-de-diseño--resumen)
+- [3. Resultados](#3-resultados)
+  - [3.1 Búsqueda baseline](#31-búsqueda-baseline)
+  - [3.2 Comparación baseline vs. pipeline agéntico](#32-comparación-baseline-vs-pipeline-agéntico)
+  - [3.3 Comparación visual de consultas en español](#33-comparación-visual-de-consultas-en-español)
+  - [3.4 Reranking para negaciones](#34-reranking-para-negaciones)
+  - [3.5 Ablation study](#35-ablation-study)
+- [4. Discusión y Análisis Crítico](#4-discusión-y-análisis-crítico)
+- [5. Trabajo Futuro](#5-trabajo-futuro)
+
+---
+
 ## 1. Análisis del Dataset (EDA)
 
 ### 1.1 Estadísticas generales
@@ -186,7 +209,7 @@ Durante el desarrollo implementamos también una versión del baseline que prome
 
 Sin embargo, cuando el pipeline agéntico tiene `should_expand = True`, el orquestador ya está combinando múltiples variantes de la consulta con pesos distintos (1.0 para la variante original, 0.5 para las adicionales). Si además cada variante usara un ensemble de templates internamente, se estarían apilando dos capas de promediado: el promedio de templates dentro de `get_text_embedding_ensemble` y el promedio ponderado entre variantes en el acumulador de scores. El efecto neto es que los scores se "aplanan" hacia valores similares entre sí, lo que degrada la discriminación en el ranking. El denominador del AP@10 se ve afectado porque el ranking relativo entre imágenes se desordena aunque el conjunto recuperado sea parecido al del baseline simple. Decidimos mantener el ensemble comentado en el código y usar embeddings sin template para la función `baseline_search` ya que notamos una degradacion en el score de nuestras submissions al usar el sistema de ensemble de templates.
 
-### 2.5 Decisiones de diseño — resumen
+### 2.5 Decisiones de diseño: resumen
 
 | Decisión                     | Valor / Elección                  | Justificación                                                   |
 | ---------------------------- | --------------------------------- | --------------------------------------------------------------- |
@@ -279,10 +302,10 @@ Para medir el aporte individual de cada componente del pipeline, se definieron c
 
 | Configuración             | Componentes activos                | MAP@10 | Delta   |
 | ------------------------- | ---------------------------------- | ------ | ------- |
-| A — Baseline puro         | ninguno                            | 0.9549 | —       |
-| B — + Traducción          | traducción                         | 0.9549 | 0.0000  |
-| C — + Expansión semántica | traducción + expansión             | 0.9622 | +0.0073 |
-| D — Pipeline completo     | traducción + expansión + reranking | 0.9639 | +0.0017 |
+| A - Baseline puro         | ninguno                            | 0.9549 | nulo    |
+| B - + Traducción          | traducción                         | 0.9549 | 0.0000  |
+| C - + Expansión semántica | traducción + expansión             | 0.9622 | +0.0073 |
+| D - Pipeline completo     | traducción + expansión + reranking | 0.9639 | +0.0017 |
 
 La traducción no aporta sobre q1..q20 porque todas esas queries ya están en inglés. La expansión semántica sube el MAP en 0.0073 puntos, impulsada principalmente por `motorbike`. El reranking agrega un +0.0017 adicional.
 
@@ -310,7 +333,7 @@ La traducción no aporta sobre q1..q20 porque todas esas queries ya están en in
 
 **Ensemble de templates.** La idea de promediar embeddings de texto generados desde múltiples templates de entrenamiento de CLIP parecía razonable en teoría. El problema apareció cuando se combinó con la expansión semántica del pipeline agéntico: dos capas de promediado producen scores más uniformes, lo que aplana el ranking y baja AP@10.
 
-**Verificación de integridad — primera versión solo LLM.** En la versión inicial, el Módulo 4 delegaba toda la detección al LLM. Phi-3-mini clasificaba consultas contradictorias como "square circle in the sky" o "underwater airplane flying" como **is_valid: True** porque capturaba el contexto general de la escena en lugar de razonar sobre la contradicción. La solución fue agregar una capa heurística determinista previa (similar al Módulo 1 de deteccion de idiomas) que detecta patrones de contradicción conocidos, reservando el LLM para casos no contemplados. Esto tiene que ver con distinción más sutil pero intrinsecamente compleja que excede lo que podemos capturar de forma confiable con un modelo pequeño.
+**Verificación de integridad (primera versión solo LLM.)** En la versión inicial, el Módulo 4 delegaba toda la detección al LLM. Phi-3-mini clasificaba consultas contradictorias como "square circle in the sky" o "underwater airplane flying" como **is_valid: True** porque capturaba el contexto general de la escena en lugar de razonar sobre la contradicción. La solución fue agregar una capa heurística determinista previa (similar al Módulo 1 de deteccion de idiomas) que detecta patrones de contradicción conocidos, reservando el LLM para casos no contemplados. Esto tiene que ver con distinción más sutil pero intrinsecamente compleja que excede lo que podemos capturar de forma confiable con un modelo pequeño.
 
 **Limitaciones de AP@10 como métrica local.** Las queries q21..q40 no tienen ground truth local disponible, por lo que toda la evaluación cuantitativa se concentra en q1..q20. Estas queries son nombres de clase simples en inglés, para los que CLIP ya funciona muy bien sin ningún preprocesamiento. Esto hace que el ablation study subestime el aporte real del pipeline, ya que los casos donde más ayuda (consultas en español, negaciones, consultas compuestas) no están representados en el ground truth con el que comparamos.
 
