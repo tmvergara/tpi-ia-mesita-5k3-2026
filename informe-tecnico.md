@@ -43,7 +43,7 @@
 
 ### 1.1 Estadísticas generales
 
-El dataset utilizado esta basado Pascal VOC 2012 (que consta de imagenes anotadas y es ampliamente utilizado en el contexto de ML y Computer Vision). Para este TPI usamos en realidad un subset especifico provisto por la cátedra con imágenes y anotaciones que ya tenemos cargadas como input del Notebook en Kaggle. El análisis se hizo sobre la totalidad del conjunto.
+El dataset utilizado está basado Pascal VOC 2012 (que consta de imágenes anotadas y es ampliamente utilizado en el contexto de ML y Computer Vision). Para este TPI usamos en realidad un subset específico provisto por la cátedra con imágenes y anotaciones que ya tenemos cargadas como input del Notebook en Kaggle. El análisis se hizo sobre la totalidad del conjunto.
 
 A modo de resumen:
 
@@ -277,7 +277,7 @@ El baseline en español recupera imágenes que tienen baja similitud con la cons
 
 ![dog not running](https://github.com/tmvergara/tpi-ia-mesita-5k3-2026/blob/main/imagenes/comparacion_query_agentinca_bike.png?raw=true)
 
-> Comparación visual: arriba baseline vs abajo agéntico para las query "perro corriendo en el parque" y "persona montando bicicleta", nos llamo la atencion que no se observa una diferencia significativa pero se trata de queries sencilla. Lo que si observamos es un score mucho mas alto, lo que indica mayor similitud demantica en el espacio de embeddings de CLIP.
+> Comparación visual: arriba baseline vs abajo agéntico para las query "perro corriendo en el parque" y "persona montando bicicleta", nos llamó la atención que no se observa una diferencia significativa pero se trata de queries sencillas. Lo que sí observamos es un score mucho mas alto, lo que indica mayor similitud semántica en el espacio de embeddings de CLIP.
 
 ### 3.4 Reranking para negaciones
 
@@ -296,7 +296,7 @@ El efecto del reranking no es perfecto: CLIP no tiene una noción explícita de 
 ### 3.5 Ablation study
 
 Aprendimos que un Ablation Study es un procedimiento que se utiliza para entender el impacto individual de cada componente de un sistema complejo como nuestro pipeline agentico.
-Nos resulto realmente util ya que al inicio obteniamos deltas negativos, lo que significaba que algunas partes del pipeline estaban literalmente degradando el desempeno. A partir de estas evidencias, pudimos ajustar estas secciones individualmente para mejorar el resultado segun lo que esperabamos.
+Nos resultó realmente útil ya que al inicio obteníamos deltas negativos, lo que significaba que algunas partes del pipeline estaban literalmente degradando el desempeño. A partir de estas evidencias, pudimos ajustar estas secciones individualmente para mejorar el resultado segun lo que esperabamos.
 
 Para medir el aporte individual de cada componente del pipeline, se definieron cuatro configuraciones acumulativas evaluadas sobre q1..q20:
 
@@ -311,7 +311,7 @@ La traducción no aporta sobre q1..q20 porque todas esas queries ya están en in
 
 ![ablation study](https://github.com/tmvergara/tpi-ia-mesita-5k3-2026/blob/main/imagenes/ablation_study.png?raw=true)
 
-> Bar chart del MAP@10 por configuración y heatmap (nos parecio muy evidente y claro) AP@10 por clase y configuración. Aca vemos el impacto principalmente en motorbike o pottedplant.
+> Bar chart del MAP@10 por configuración y heatmap (nos pareció muy evidente y claro) AP@10 por clase y configuración. Acá vemos el impacto principalmente en motorbike o pottedplant.
 
 ---
 
@@ -325,7 +325,7 @@ La traducción no aporta sobre q1..q20 porque todas esas queries ya están en in
 
 **FAISS con búsqueda exacta.** La decisión de usar `IndexFlatIP` en lugar de aproximaciones IVF fue correcta para este tamaño de dataset. Evitamos introducir error de aproximación y simplificamos el análisis comparativo.
 
-**Trazabilidad.** El sistema de trazas nos permitio entender el comportamiento del pipeline sin necesidad de re-ejecutar. Esto fue útil para debuggear el problema del orden de módulos y para verificar que el LLM generaba los campos JSON esperados en cada caso de prueba.
+**Trazabilidad.** El sistema de trazas nos permitió entender el comportamiento del pipeline sin necesidad de re-ejecutar. Esto fue útil para debuggear el problema del orden de módulos y para verificar que el LLM generaba los campos JSON esperados en cada caso de prueba.
 
 ### Qué no funcionó como esperábamos
 
@@ -347,7 +347,7 @@ El modelo LLM agrega latencia en cada consulta (aproximadamente 1-3 segundos por
 
 ## 5. Trabajo Futuro
 
-Con más tiempo y recursos, las mejoras más interesantes a explorar en nuestra opinion serían:
+Con más tiempo y recursos, las mejoras más interesantes a explorar en nuestra opinión serían:
 
 **Evaluación sobre consultas complejas.** Construir un subconjunto anotado manualmente para las queries q21..q40 permitiría medir el impacto del pipeline en los casos para los que fue diseñado. También se podría aproximar el ground truth de consultas compuestas descomponiéndolas en componentes simples y tomando la intersección de resultados parciales.
 
